@@ -1,9 +1,9 @@
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use vaultility_service::app_state::AppState;
-use vaultility_service::services::data_stores::items::PostgresItemsStore;
-use vaultility_service::utils::constant::prod;
-use vaultility_service::{Application, get_postgres_pool};
+use vaultool_service::app_state::AppState;
+use vaultool_service::services::data_stores::items::PostgresItemsStore;
+use vaultool_service::utils::constant::prod;
+use vaultool_service::{Application, get_postgres_pool};
 
 #[tokio::main]
 async fn main() {
