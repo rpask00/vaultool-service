@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT id, name, description\n            FROM items\n            WHERE name ILIKE $1\n            ORDER BY id\n            LIMIT $2 OFFSET $3\n            ",
+  "query": "\n            SELECT id, name, description\n            FROM items\n            WHERE name ILIKE $1\n            LIMIT $2\n            OFFSET $3\n            ",
   "describe": {
     "columns": [
       {
@@ -32,5 +32,5 @@
       false
     ]
   },
-  "hash": "9184a9cb558fb922903e59d34c23d27af142e53dd31cc766d7672ee2228339e8"
+  "hash": "fe6251be3802db90150e02137834cd2e5605389d91ca714f01b891122bc66795"
 }
