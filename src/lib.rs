@@ -41,7 +41,7 @@ impl Application {
 
         let router = Router::new()
             .fallback_service(assets_dir)
-            .route("/items", get(routes::items))
+            .route("/items", get(routes::items::list))
             .with_state(app_state)
             .layer(cors_layer);
 
