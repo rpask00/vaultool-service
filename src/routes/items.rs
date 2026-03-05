@@ -1,6 +1,6 @@
 use crate::app_state::AppState;
 use crate::domain::error::ApiError;
-use crate::domain::item::Item;
+use crate::domain::models::item::Item;
 use axum::Json;
 use axum::extract::{Query, State};
 use axum::http::StatusCode;

@@ -1,6 +1,6 @@
 use crate::domain::data_stores::ItemsStore;
-use crate::domain::item::Item;
 use sqlx::{PgPool, Row};
+use crate::domain::models::item::Item;
 
 pub struct PostgresItemsStore {
     pool: PgPool,
