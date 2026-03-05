@@ -25,3 +25,4 @@ thiserror = "2.0.18"
 tracing-subscriber = { version = "0.3.20", features = ["registry", "env-filter"] }
 tracing-error = "0.2.1"
 secrecy = { version = "0.10.3", features = ["serde"] }
+tap = "1.0.1"

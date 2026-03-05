@@ -1,13 +1,17 @@
-use axum::Json;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use axum::Json;
+use color_eyre::eyre::eyre;
+use color_eyre::Report;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum ApiError {
+    #[error("Not found")]
+    NotFound,
     #[error("Unexpected error")]
-    UnexpectedError,
+    UnexpectedError(#[source] Report),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -15,10 +19,12 @@ pub struct ErrorResponse {
     pub error: String,
 }
 
+
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         let status = match &self {
-            ApiError::UnexpectedError => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            ApiError::NotFound => StatusCode::NOT_FOUND,
         };
 
         let body = Json(ErrorResponse {
@@ -26,5 +32,43 @@ impl IntoResponse for ApiError {
         });
 
         (status, body).into_response()
+    }
+}
+
+
+
+#[derive(Debug, Error)]
+pub enum StoreError {
+    #[error("Item not found")]
+    NotFound,
+    #[error("Item with the same name already exists")]
+    DuplicateName,
+    #[error("Unexpected error")]
+    UnexpectedError(#[source] Report),
+}
+
+impl IntoResponse for StoreError {
+    fn into_response(self) -> Response {
+        let status = match &self {
+            StoreError::NotFound => StatusCode::NOT_FOUND,
+            StoreError::DuplicateName => StatusCode::CONFLICT,
+            StoreError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+        };
+
+        let body = Json(ErrorResponse {
+            error: self.to_string(),
+        });
+
+        (status, body).into_response()
+    }
+}
+
+impl From<StoreError> for ApiError {
+    fn from(error: StoreError) -> Self {
+        match error {
+            StoreError::NotFound => ApiError::NotFound,
+            StoreError::DuplicateName => ApiError::UnexpectedError(eyre!("Duplicate name error")),
+            StoreError::UnexpectedError(e) => ApiError::UnexpectedError(e),
+        }
     }
 }

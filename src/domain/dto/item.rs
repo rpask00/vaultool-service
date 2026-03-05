@@ -1,5 +1,4 @@
-use serde::{Deserialize, Serialize};
-use crate::domain::models::item::Item;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct CreateItem {
@@ -15,12 +14,4 @@ pub struct UpdateItem {
     pub description: Option<String>,
     pub quantity: Option<u32>,
     pub tags: Option<Vec<String>>,
-}
-
-#[derive(Debug, Serialize)]
-pub struct ItemsResponse {
-    pub items: Vec<Item>,
-    pub total: usize,
-    pub page: u32,
-    pub per_page: u32,
 }

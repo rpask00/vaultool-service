@@ -1,18 +1,12 @@
 use crate::app_state::AppState;
+use crate::domain::dto::item::{CreateItem, UpdateItem};
 use crate::domain::error::ApiError;
-use crate::domain::models::item::Item;
-use axum::Json;
+use crate::domain::models::ListResponse;
 use axum::extract::{Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use serde::{Deserialize, Serialize};
-
-#[derive(Debug, Serialize, Deserialize)]
-struct ItemsResponse {
-    items: Vec<Item>,
-    #[serde(rename = "totalItems")]
-    total_items: usize,
-}
+use axum::Json;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 pub struct ItemsQuery {
@@ -30,17 +24,57 @@ pub async fn list(
     let name_filter = params.name.unwrap_or_default().to_lowercase();
 
     let items_store = state.items_store.write().await;
-    let items = items_store.get_items(page, per_page, name_filter).await;
+    let (total, items) = items_store.get_items(page, per_page, name_filter).await?;
 
     Ok((
         StatusCode::OK,
-        Json(ItemsResponse {
+        Json(ListResponse {
+            total,
             items,
-            total_items: 100,
+            page,
+            per_page,
         }),
     ))
 }
 
-pub async fn create() -> impl IntoResponse {
-    (StatusCode::CREATED, Json("Item created successfully"))
+pub async fn get(
+    State(state): State<AppState>,
+    axum::extract::Path(id): axum::extract::Path<u32>,
+) -> Result<impl IntoResponse, ApiError> {
+    let items_store = state.items_store.write().await;
+    let item = items_store.get_item(id).await?;
+
+    Ok((StatusCode::OK, Json(item)))
+}
+
+pub async fn create(
+    State(state): State<AppState>,
+    Json(payload): Json<CreateItem>,
+) -> Result<impl IntoResponse, ApiError> {
+    let mut items_store = state.items_store.write().await;
+    let item = items_store.create_item(payload).await?;
+
+    Ok((StatusCode::CREATED, Json(item)))
+}
+
+pub async fn update(
+    State(state): State<AppState>,
+    axum::extract::Path(id): axum::extract::Path<u32>,
+    Json(payload): Json<UpdateItem>,
+) -> Result<impl IntoResponse, ApiError> {
+    let mut items_store = state.items_store.write().await;
+    let item = items_store.update_item(id, payload).await?;
+
+    Ok((StatusCode::OK, Json(item)))
+}
+
+
+pub async fn delete(
+    State(state): State<AppState>,
+    axum::extract::Path(id): axum::extract::Path<u32>,
+) -> Result<impl IntoResponse, ApiError> {
+    let mut items_store = state.items_store.write().await;
+    items_store.delete_item(id).await?;
+
+    Ok(StatusCode::NO_CONTENT)
 }

@@ -6,7 +6,7 @@ pub mod utils;
 
 use crate::app_state::AppState;
 use axum::Router;
-use axum::routing::{get, post};
+use axum::routing::{delete, get, post, put};
 use axum::serve::Serve;
 use dotenv::dotenv;
 use reqwest::Method;
@@ -42,6 +42,10 @@ impl Application {
         let router = Router::new()
             .fallback_service(assets_dir)
             .route("/items", get(routes::items::list))
+            .route("/items", post(routes::items::create))
+            .route("/items/{id}", get(routes::items::get))
+            .route("/items/{id}", put(routes::items::update))
+            .route("/items/{id}", delete(routes::items::delete))
             .with_state(app_state)
             .layer(cors_layer);
 
@@ -61,7 +65,6 @@ impl Application {
 }
 
 pub async fn get_postgres_pool(url: SecretString) -> Result<PgPool, sqlx::Error> {
-    // Create a new PostgreSQL connection pool
     PgPoolOptions::new()
         .max_connections(5)
         .connect(url.expose_secret())
