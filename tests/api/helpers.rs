@@ -1,8 +1,7 @@
 use dotenv::dotenv;
 use reqwest::cookie::Jar;
-use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
-use sqlx::{Connection, Executor, PgConnection, PgPool};
-use std::str::FromStr;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::{Executor, PgPool};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
