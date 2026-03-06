@@ -17,6 +17,8 @@ impl PostgresItemsStore {
 
 #[async_trait::async_trait]
 impl ItemsStore for PostgresItemsStore {
+
+    #[tracing::instrument(name = "Fetch items from database.", skip_all)]
     async fn get_items(
         &self,
         page: u32,
@@ -65,6 +67,7 @@ impl ItemsStore for PostgresItemsStore {
         Ok((total, items))
     }
 
+    #[tracing::instrument(name = "Fetch item from database.", skip_all)]
     async fn get_item(&self, id: u32) -> Result<Item, StoreError> {
         sqlx::query!(
             r#"
@@ -87,6 +90,7 @@ impl ItemsStore for PostgresItemsStore {
         .ok_or(StoreError::NotFound)
     }
 
+    #[tracing::instrument(name = "Create item in database.", skip_all)]
     async fn create_item(&mut self, item: CreateItem) -> Result<Item, StoreError> {
         sqlx::query!(
             r#"
@@ -111,6 +115,7 @@ impl ItemsStore for PostgresItemsStore {
         })
     }
 
+    #[tracing::instrument(name = "Update item in database.", skip_all)]
     async fn update_item(&mut self, id: u32, item: UpdateItem) -> Result<Item, StoreError> {
         sqlx::query!(
             r#"
@@ -139,6 +144,7 @@ impl ItemsStore for PostgresItemsStore {
         .ok_or(StoreError::NotFound)
     }
 
+    #[tracing::instrument(name = "Delete item in database.", skip_all)]
     async fn delete_item(&mut self, id: u32) -> Result<(), StoreError> {
         sqlx::query!(
             r#"

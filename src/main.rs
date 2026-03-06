@@ -4,9 +4,11 @@ use vaultool_service::app_state::AppState;
 use vaultool_service::services::data_stores::items::PostgresItemsStore;
 use vaultool_service::utils::constant::prod;
 use vaultool_service::{Application, get_postgres_pool};
+use vaultool_service::utils::tracing::init_tracing;
 
 #[tokio::main]
 async fn main() {
+    init_tracing().expect("Failed to initialize tracing");
     color_eyre::install().expect("Failed to install color_eyre");
 
     let poll = get_postgres_pool(

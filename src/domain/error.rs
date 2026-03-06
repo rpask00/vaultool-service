@@ -1,3 +1,4 @@
+use std::error::Error;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
@@ -22,6 +23,8 @@ pub struct ErrorResponse {
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
+        log_error_chain(&self);
+
         let status = match &self {
             ApiError::UnexpectedError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             ApiError::NotFound => StatusCode::NOT_FOUND,
@@ -49,6 +52,8 @@ pub enum StoreError {
 
 impl IntoResponse for StoreError {
     fn into_response(self) -> Response {
+        log_error_chain(&self);
+        
         let status = match &self {
             StoreError::NotFound => StatusCode::NOT_FOUND,
             StoreError::DuplicateName => StatusCode::CONFLICT,
@@ -72,3 +77,17 @@ impl From<StoreError> for ApiError {
         }
     }
 }
+
+fn log_error_chain(e: &(dyn Error + 'static)) {
+    let separator = "\n-----------------------------------------------------------------------------------\n";
+    let mut report = format!("{}{:?}\n", separator, e);
+    let mut current = e.source();
+    while let Some(cause) = current {
+        let str = format!("Caused by:\n\n{:?}", cause);
+        report = format!("{}\n{}", report, str);
+        current = cause.source();
+    }
+    report = format!("{}\n{}", report, separator);
+    tracing::error!("{}", report);
+}
+

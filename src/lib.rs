@@ -17,6 +17,8 @@ use std::error::Error;
 use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
+use tower_http::trace::TraceLayer;
+use crate::utils::tracing::{make_span_with_request_id, on_request, on_response};
 
 pub struct Application {
     server: Serve<TcpListener, Router, Router>,
@@ -47,7 +49,13 @@ impl Application {
             .route("/items/{id}", put(routes::items::update))
             .route("/items/{id}", delete(routes::items::delete))
             .with_state(app_state)
-            .layer(cors_layer);
+            .layer(cors_layer)
+            .layer(
+                TraceLayer::new_for_http()
+                    .make_span_with(make_span_with_request_id)
+                    .on_request(on_request)
+                    .on_response(on_response),
+            );
 
         let listener = tokio::net::TcpListener::bind(address).await?;
 
