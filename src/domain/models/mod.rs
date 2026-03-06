@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 pub mod item;
+pub mod file;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ListResponse<T> {

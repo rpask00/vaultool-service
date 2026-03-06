@@ -17,7 +17,7 @@ validator = "=0.20.0"
 axum-extra = { version = "0.12.5", features = ["cookie"] }
 chrono = "0.4.43"
 lazy_static = "1.5.0"
-sqlx = { version = "0.8.6", features = [ "runtime-tokio-rustls", "postgres", "migrate"] }
+sqlx = { version = "0.8.6", features = [ "runtime-tokio-rustls", "postgres", "migrate", "time"] }
 tower-http = { version = "0.6.6", features = ["fs", "cors", "trace"] }
 tracing = "0.1.41"
 color-eyre = "0.6.5"
