@@ -3,7 +3,7 @@ use crate::domain::dto::item::{CreateItem, UpdateItem};
 use crate::domain::error::StoreError;
 use crate::domain::models::item::Item;
 use color_eyre::eyre::eyre;
-use sqlx::{PgPool, Row};
+use sqlx::{PgPool};
 
 pub struct PostgresItemsStore {
     pool: PgPool,

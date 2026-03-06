@@ -8,7 +8,7 @@ use uuid::Uuid;
 use vaultool_service::app_state::AppState;
 use vaultool_service::services::data_stores::items::PostgresItemsStore;
 use vaultool_service::utils::constant::test;
-use vaultool_service::{get_postgres_pool, Application};
+use vaultool_service::{Application, get_postgres_pool};
 
 pub struct TestApp {
     pub address: String,
@@ -70,8 +70,42 @@ impl TestApp {
             .expect("Failed to execute request.")
     }
 
-}
+    pub async fn list_items(&self) -> reqwest::Response {
+        self.http_client
+            .get(format!("{}/items", &self.address))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
 
+    pub async fn get_item(&self, item_id: i32) -> reqwest::Response {
+        self.http_client
+            .get(format!("{}/items/{}", &self.address, item_id))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn update_item<Body>(&self, item_id: i32, body: &Body) -> reqwest::Response
+    where
+        Body: serde::Serialize,
+    {
+        self.http_client
+            .put(format!("{}/items/{}", &self.address, item_id))
+            .json(body)
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+
+    pub async fn delete_item(&self, item_id: i32) -> reqwest::Response {
+        self.http_client
+            .delete(format!("{}/items/{}", &self.address, item_id))
+            .send()
+            .await
+            .expect("Failed to execute request.")
+    }
+}
 
 async fn configure_postgresql() -> (PgPool, String) {
     dotenv().ok();
@@ -124,4 +158,3 @@ async fn configure_database(db_conn_string: &str, db_name: &str) {
         .await
         .expect("Failed to migrate the database");
 }
-
