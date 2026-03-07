@@ -1,3 +1,4 @@
+use axum::body::Bytes;
 use crate::domain::dto::file::CreateFile;
 use crate::domain::dto::item::{CreateItem, UpdateItem};
 use crate::domain::error::StoreError;
@@ -23,9 +24,8 @@ pub trait FilesStore: Send + Sync {
     async fn get_files(&self, item_id: u32) -> Result<Vec<File>, StoreError>;
     async fn create_file(
         &mut self,
-        item_id: u32,
         file: CreateFile,
-        file_data: Vec<u8>,
+        file_data: Bytes,
     ) -> Result<File, StoreError>;
     async fn delete_file(&mut self, id: u32) -> Result<(), StoreError>;
 }
