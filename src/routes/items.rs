@@ -74,7 +74,11 @@ pub async fn delete(
     axum::extract::Path(id): axum::extract::Path<u32>,
 ) -> Result<impl IntoResponse, ApiError> {
     let mut items_store = state.items_store.write().await;
+    let mut files_store = state.files_store.write().await;
+    let files = files_store.get_files(id).await?;
+
     items_store.delete_item(id).await?;
+    files_store.delete_files_from_fs(files).await?;
 
     Ok(StatusCode::NO_CONTENT)
 }

@@ -93,8 +93,6 @@ impl FilesStore for PostgresFilesStore {
     }
 
     async fn delete_file(&mut self, id: u32) -> Result<(), StoreError> {
-        println!("{}", id);
-
         for entry in glob(&format!("uploads/{}.*", id)).unwrap() {
             if let Ok(path) = entry {
                 fs::remove_file(path).unwrap();
@@ -111,6 +109,20 @@ impl FilesStore for PostgresFilesStore {
         .execute(&self.pool)
         .await
         .map_err(|e| StoreError::UnexpectedError(e.into()))?;
+
+        Ok(())
+    }
+
+    async fn delete_files_from_fs(&mut self, files: Vec<File>) -> Result<(), StoreError> {
+        for file in files {
+            for entry in glob(&format!("uploads/{}.*", file.id)).unwrap() {
+                if let Ok(path) = entry {
+                    fs::remove_file(path).map_err(
+                        |e| StoreError::UnexpectedError(e.into())
+                    )?;
+                }
+            }
+        }
 
         Ok(())
     }
