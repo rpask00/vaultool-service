@@ -1,16 +1,16 @@
 use crate::app_state::AppState;
 use crate::domain::dto::file::CreateFile;
 use crate::domain::error::ApiError;
+use crate::domain::models::file::FileCategory;
+use axum::Json;
 use axum::body::Bytes;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::Json;
 use axum_extra::extract::Multipart;
 use color_eyre::eyre::eyre;
 use serde_json::json;
 use std::collections::HashMap;
-
 
 pub async fn list(
     State(state): State<AppState>,
@@ -34,61 +34,61 @@ pub async fn create(
         .await
         .map_err(|e| ApiError::UnexpectedError(eyre!(e)))?
     {
-        let field_name = &field.name().unwrap_or("unknown").to_string();
+        if let Some(file_name) = field.file_name() {
+            let file_name = file_name.to_owned();
 
-        if let Some(filename) = field.file_name() {
-            // File field
-            let filename = filename.to_string();
-            let data = field
+            let file_data = field
                 .bytes()
                 .await
                 .map_err(|e| ApiError::UnexpectedError(eyre!(e)))?;
-            files.push((filename, data));
+
+            files.push((file_name.to_string(), file_data));
         } else {
-            // Form field
+            let field_name = field.name().unwrap_or("unknown").to_owned();
+
             let value = field
                 .text()
                 .await
                 .map_err(|e| ApiError::UnexpectedError(eyre!(e)))?;
-            form_data.insert(field_name.clone(), value);
+            form_data.insert(field_name, value);
         }
     }
 
     // Extract specific fields
-    let category = form_data.get(&"category".to_string()).cloned();
-    let description = form_data.get(&"description".to_string()).cloned();
-    let item_id = form_data.get(&"item_id".to_string()).cloned();
+    let category = form_data
+        .get(&"category".to_string())
+        .cloned()
+        .map(|cat| cat.into())
+        .unwrap_or(FileCategory::OTHER);
+
+    let item_id = form_data
+        .get("item_id")
+        .ok_or_else(|| ApiError::UnexpectedError(eyre!("Missing item_id in form data")))?
+        .parse::<u32>()
+        .map_err(|e| ApiError::UnexpectedError(eyre!(e)))?;
 
     let mut files_store = state.files_store.write().await;
 
-    for (filename, file_data) in files {
-        files_store
+    let mut output  = vec![];
+
+    for (file_name, file_data) in files {
+        let file = files_store
             .create_file(
                 CreateFile {
-                    item_id: item_id
-                        .clone()
-                        .unwrap()
-                        .parse::<u32>()
-                        .map_err(|e| ApiError::UnexpectedError(eyre!(e)))?,
-                    name: filename,
-                    category: form_data
-                        .get(&"category".to_string())
-                        .cloned()
-                        .unwrap()
-                        .into(),
+                    item_id,
+                    name: file_name,
+                    category,
                 },
                 file_data,
             )
             .await?;
+
+        output.push(file);
     }
 
     Ok((
         StatusCode::CREATED,
-        Json(json!({
-            "category": category.unwrap_or("unknown".to_string()),
-            "description": description.unwrap_or("".to_string()),
-            "item_id": item_id.unwrap_or("unknown".to_string())
-        })),
+        Json(json!(output)),
     ))
 }
 

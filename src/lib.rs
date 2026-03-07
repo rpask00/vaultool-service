@@ -14,6 +14,7 @@ use secrecy::{ExposeSecret, SecretString};
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use std::error::Error;
+use axum::extract::DefaultBodyLimit;
 use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
@@ -51,6 +52,7 @@ impl Application {
             .route("/files", get(routes::files::list))
             .route("/files", post(routes::files::create))
             .route("/files/{id}", delete(routes::files::delete))
+            .layer(DefaultBodyLimit::max(50 * 1024 * 1024)) // 50MB
             .with_state(app_state)
             .layer(cors_layer)
             .layer(

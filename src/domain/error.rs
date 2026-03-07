@@ -1,10 +1,10 @@
-use std::error::Error;
+use axum::Json;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::Json;
-use color_eyre::eyre::eyre;
 use color_eyre::Report;
+use color_eyre::eyre::eyre;
 use serde::{Deserialize, Serialize};
+use std::error::Error;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -19,7 +19,6 @@ pub enum ApiError {
 pub struct ErrorResponse {
     pub error: String,
 }
-
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
@@ -38,8 +37,6 @@ impl IntoResponse for ApiError {
     }
 }
 
-
-
 #[derive(Debug, Error)]
 pub enum StoreError {
     #[error("Item not found")]
@@ -53,7 +50,7 @@ pub enum StoreError {
 impl IntoResponse for StoreError {
     fn into_response(self) -> Response {
         log_error_chain(&self);
-        
+
         let status = match &self {
             StoreError::NotFound => StatusCode::NOT_FOUND,
             StoreError::DuplicateName => StatusCode::CONFLICT,
@@ -88,6 +85,9 @@ fn log_error_chain(e: &(dyn Error + 'static)) {
         current = cause.source();
     }
     report = format!("{}\n{}", report, separator);
+    #[cfg(debug_assertions)]
+    eprintln!("{}", report);  // Colors work in development
+
+    #[cfg(not(debug_assertions))]
     tracing::error!("{}", report);
 }
-

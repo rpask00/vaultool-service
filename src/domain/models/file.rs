@@ -1,11 +1,11 @@
+use std::fmt::Display;
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone, Copy)]
 pub enum FileCategory {
     PHOTO = 1,
     OTHER = 999,
 }
-
 
 impl From<String> for FileCategory {
     fn from(value: String) -> Self {
