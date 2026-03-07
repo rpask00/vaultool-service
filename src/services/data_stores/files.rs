@@ -2,11 +2,11 @@ use crate::domain::data_stores::FilesStore;
 use crate::domain::dto::file::CreateFile;
 use crate::domain::error::StoreError;
 use crate::domain::models::file::{File, FileCategory};
-use crate::domain::models::item::Item;
+use axum::body::Bytes;
+use glob::glob;
 use sqlx::PgPool;
 use std::fs;
 use tap::Pipe;
-use tokio::process::Command;
 
 pub struct PostgresFilesStore {
     pool: PgPool,
@@ -48,9 +48,8 @@ impl FilesStore for PostgresFilesStore {
 
     async fn create_file(
         &mut self,
-        item_id: u32,
         file: CreateFile,
-        file_data: Vec<u8>,
+        file_data: Bytes,
     ) -> Result<File, StoreError> {
         if fs::exists("uploads".to_string()).unwrap() {
             fs::create_dir_all("uploads").map_err(|e| StoreError::UnexpectedError(e.into()))?;
@@ -62,7 +61,7 @@ impl FilesStore for PostgresFilesStore {
             VALUES ($1, $2, $3, $4, $5)
             RETURNING id, item_id, name, created_at, category, size, extension
             "#,
-            item_id as i64,
+            file.item_id as i64,
             file.name,
             file.category as i32,
             file_data.len() as i64,
@@ -94,16 +93,18 @@ impl FilesStore for PostgresFilesStore {
     }
 
     async fn delete_file(&mut self, id: u32) -> Result<(), StoreError> {
-        Command::new("rm")
-            .arg(format!("uploads/{}.*", id.to_string()))
-            .status()
-            .await
-            .map_err(|e| StoreError::UnexpectedError(e.into()))?;
+        println!("{}", id);
+
+        for entry in glob(&format!("uploads/{}.*", id)).unwrap() {
+            if let Ok(path) = entry {
+                fs::remove_file(path).unwrap();
+            }
+        }
 
         sqlx::query!(
             r#"
             DELETE FROM files
-            WHERE item_id = $1
+            WHERE id = $1
             "#,
             id as i64
         )

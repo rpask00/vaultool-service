@@ -9,6 +9,7 @@ use vaultool_service::app_state::AppState;
 use vaultool_service::services::data_stores::items::PostgresItemsStore;
 use vaultool_service::utils::constant::test;
 use vaultool_service::{Application, get_postgres_pool};
+use vaultool_service::services::data_stores::files::PostgresFilesStore;
 
 pub struct TestApp {
     pub address: String,
@@ -22,9 +23,10 @@ impl TestApp {
     pub async fn new() -> Self {
         let (pg_pool, db_name) = configure_postgresql().await;
 
-        let items_store = Arc::new(RwLock::new(PostgresItemsStore::new(pg_pool)));
+        let items_store = Arc::new(RwLock::new(PostgresItemsStore::new(pg_pool.clone())));
+        let files_store = Arc::new(RwLock::new(PostgresFilesStore::new(pg_pool)));
 
-        let app_state = AppState::new(items_store);
+        let app_state = AppState::new(items_store, files_store);
 
         let cookie_jar = Arc::new(Jar::default());
 

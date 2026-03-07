@@ -1,3 +1,2 @@
 pub(crate) mod items;
-mod files;
-
+pub(crate) mod files;

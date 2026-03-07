@@ -6,8 +6,18 @@ pub enum FileCategory {
     OTHER = 999,
 }
 
-impl FileCategory {
-    pub fn from(value: i32) -> Self {
+
+impl From<String> for FileCategory {
+    fn from(value: String) -> Self {
+        match value.to_lowercase().as_str() {
+            "1" => Self::PHOTO,
+            _ => Self::OTHER,
+        }
+    }
+}
+
+impl From<i32> for FileCategory {
+    fn from(value: i32) -> Self {
         match value {
             1 => Self::PHOTO,
             _ => Self::OTHER,

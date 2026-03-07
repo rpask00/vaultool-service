@@ -48,6 +48,9 @@ impl Application {
             .route("/items/{id}", get(routes::items::get))
             .route("/items/{id}", put(routes::items::update))
             .route("/items/{id}", delete(routes::items::delete))
+            .route("/files", get(routes::files::list))
+            .route("/files", post(routes::files::create))
+            .route("/files/{id}", delete(routes::files::delete))
             .with_state(app_state)
             .layer(cors_layer)
             .layer(
