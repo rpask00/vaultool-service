@@ -44,14 +44,17 @@ impl Application {
 
         let router = Router::new()
             .fallback_service(assets_dir)
+            // ITEMS
             .route("/items", get(routes::items::list))
             .route("/items", post(routes::items::create))
             .route("/items/{id}", get(routes::items::get))
             .route("/items/{id}", put(routes::items::update))
             .route("/items/{id}", delete(routes::items::delete))
+            // FILES
             .route("/files", get(routes::files::list))
             .route("/files", post(routes::files::create))
             .route("/files/{id}", delete(routes::files::delete))
+
             .layer(DefaultBodyLimit::max(50 * 1024 * 1024)) // 50MB
             .with_state(app_state)
             .layer(cors_layer)

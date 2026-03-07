@@ -4,20 +4,26 @@ use crate::domain::error::ApiError;
 use crate::domain::models::file::FileCategory;
 use axum::Json;
 use axum::body::Bytes;
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum_extra::extract::Multipart;
 use color_eyre::eyre::eyre;
 use serde_json::json;
 use std::collections::HashMap;
+use serde::Deserialize;
+
+#[derive(Debug, Deserialize)]
+pub struct FilesQuery {
+    item_id: u32,
+}
 
 pub async fn list(
     State(state): State<AppState>,
-    Path(item_id): Path<u32>,
+    Query(query): Query<FilesQuery>,
 ) -> Result<impl IntoResponse, ApiError> {
     let files_store = state.files_store.read().await;
-    let files = files_store.get_files(item_id).await?;
+    let files = files_store.get_files(query.item_id).await?;
 
     Ok((StatusCode::OK, Json(files)))
 }
