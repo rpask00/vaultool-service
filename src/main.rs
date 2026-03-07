@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use vaultool_service::app_state::AppState;
-use vaultool_service::services::data_stores::{files::PostgresFilesStore, items::PostgresItemsStore};
+use vaultool_service::services::data_stores::{postgres_files_store::PostgresFilesStore, postgres_items_store::PostgresItemsStore};
 use vaultool_service::utils::constant::prod;
 use vaultool_service::{Application, get_postgres_pool};
 use vaultool_service::utils::tracing::init_tracing;

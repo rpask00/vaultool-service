@@ -6,10 +6,10 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
 use vaultool_service::app_state::AppState;
-use vaultool_service::services::data_stores::items::PostgresItemsStore;
+use vaultool_service::services::data_stores::postgres_items_store::PostgresItemsStore;
 use vaultool_service::utils::constant::test;
 use vaultool_service::{Application, get_postgres_pool};
-use vaultool_service::services::data_stores::files::PostgresFilesStore;
+use vaultool_service::services::data_stores::postgres_files_store::PostgresFilesStore;
 
 pub struct TestApp {
     pub address: String,
