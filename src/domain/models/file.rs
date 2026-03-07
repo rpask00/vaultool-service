@@ -1,10 +1,20 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Serialize, Debug, Clone, Copy)]
+#[derive(Deserialize, Debug, Clone, Copy)]
 pub enum FileCategory {
     PHOTO = 1,
     OTHER = 999,
 }
+
+impl Serialize for FileCategory {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        serializer.serialize_u32( *self as u32)
+    }
+}
+
 
 impl From<String> for FileCategory {
     fn from(value: String) -> Self {
