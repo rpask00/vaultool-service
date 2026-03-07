@@ -3,3 +3,6 @@
 .envrc
 .idea
 compose.yml
+
+uploads
+src/bin/playground.rs
