@@ -67,6 +67,13 @@ pub async fn create(
         .map(|cat| cat.into())
         .unwrap_or(FileCategory::OTHER);
 
+    let priority = form_data
+        .get(&"priority".to_string())
+        .map(|priority| priority.to_owned())
+        .unwrap_or("0".to_string())
+        .parse::<u32>()
+        .map_err(|e| ApiError::UnexpectedError(eyre!(e)))?;
+
     let item_id = form_data
         .get("item_id")
         .ok_or_else(|| ApiError::UnexpectedError(eyre!("Missing item_id in form data")))?
@@ -84,6 +91,7 @@ pub async fn create(
                     item_id,
                     name: file_name,
                     category,
+                    priority
                 },
                 file_data,
             )

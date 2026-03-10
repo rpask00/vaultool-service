@@ -23,7 +23,7 @@ impl FilesStore for PostgresFilesStore {
     async fn get_files(&self, item_id: u32) -> Result<Vec<File>, StoreError> {
         sqlx::query!(
             r#"
-            SELECT id, item_id, name, created_at, category, size, extension
+            SELECT id, item_id, name, created_at, category, size, extension, priority
             FROM files
             WHERE item_id = $1
             "#,
@@ -37,6 +37,7 @@ impl FilesStore for PostgresFilesStore {
             id: row.id as u32,
             item_id: Some(row.item_id as u32),
             name: row.name,
+            priority: row.priority as u32,
             ext: row.extension,
             category: FileCategory::from(row.category),
             created_at: row.created_at.to_string(),
@@ -57,15 +58,16 @@ impl FilesStore for PostgresFilesStore {
 
         let file = sqlx::query!(
             r#"
-            INSERT INTO files (item_id, name, category, size, extension)
-            VALUES ($1, $2, $3, $4, $5)
-            RETURNING id, item_id, name, created_at, category, size, extension
+            INSERT INTO files (item_id, name, category, size, extension, priority)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id, item_id, name, created_at, category, size, extension, priority
             "#,
             file.item_id as i64,
             file.name,
             file.category as i32,
             file_data.len() as i64,
-            file.name.split('.').last().unwrap_or("png").to_string()
+            file.name.split('.').last().unwrap_or("png").to_string(),
+            file.priority as i64
         )
         .fetch_one(&self.pool)
         .await
@@ -74,6 +76,7 @@ impl FilesStore for PostgresFilesStore {
             id: row.id as u32,
             item_id: Some(row.item_id as u32),
             name: row.name,
+            priority: row.priority as u32,
             ext: row.extension,
             category: FileCategory::from(row.category),
             created_at: row.created_at.to_string(),

@@ -38,6 +38,7 @@ pub struct File {
     pub id: u32,
     pub item_id: Option<u32>,
     pub name: String,
+    pub priority: u32,
     pub ext: String,
     pub category: FileCategory,
     pub created_at: String,
