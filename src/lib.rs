@@ -5,7 +5,9 @@ pub mod services;
 pub mod utils;
 
 use crate::app_state::AppState;
+use crate::utils::tracing::{make_span_with_request_id, on_request, on_response};
 use axum::Router;
+use axum::extract::DefaultBodyLimit;
 use axum::routing::{delete, get, post, put};
 use axum::serve::Serve;
 use dotenv::dotenv;
@@ -14,12 +16,10 @@ use secrecy::{ExposeSecret, SecretString};
 use sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use std::error::Error;
-use axum::extract::DefaultBodyLimit;
 use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
-use crate::utils::tracing::{make_span_with_request_id, on_request, on_response};
 
 pub struct Application {
     server: Serve<TcpListener, Router, Router>,
@@ -33,13 +33,17 @@ impl Application {
         let assets_dir = ServeDir::new("assets");
 
         let allowed_origins = [
-            "http://localhost:8000".parse()?,
+            "http://localhost:4200".parse()?,
             "http://167.71.36.159:7000".parse()?,
         ];
 
         let cors_layer = CorsLayer::new()
-            .allow_methods([Method::GET, Method::POST])
+            .allow_methods([Method::GET, Method::POST, Method::PUT, Method::DELETE])
             .allow_origin(allowed_origins)
+            .allow_headers(vec![
+                axum::http::header::CONTENT_TYPE,
+                axum::http::header::AUTHORIZATION,
+            ])
             .allow_credentials(true);
 
         let router = Router::new()
@@ -54,7 +58,7 @@ impl Application {
             .route("/files", get(routes::files::list))
             .route("/files", post(routes::files::create))
             .route("/files/{id}", delete(routes::files::delete))
-
+            .nest_service("/images", ServeDir::new("uploads"))
             .layer(DefaultBodyLimit::max(50 * 1024 * 1024)) // 50MB
             .with_state(app_state)
             .layer(cors_layer)
