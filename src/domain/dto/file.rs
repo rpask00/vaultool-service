@@ -3,7 +3,7 @@ use crate::domain::models::file::FileCategory;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct CreateFile {
-    pub item_id: u32,
+    pub item_id: Option<u32>,
     pub name: String,
     pub category: FileCategory,
     pub priority: u32

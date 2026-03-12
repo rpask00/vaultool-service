@@ -75,7 +75,7 @@ pub async fn delete(
 ) -> Result<impl IntoResponse, ApiError> {
     let mut items_store = state.items_store.write().await;
     let mut files_store = state.files_store.write().await;
-    let files = files_store.get_files(id).await?;
+    let files = files_store.get_files(vec![id]).await?;
 
     items_store.delete_item(id).await?;
     files_store.delete_files_from_fs(files).await?;

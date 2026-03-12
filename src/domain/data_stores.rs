@@ -21,7 +21,7 @@ pub trait ItemsStore: Send + Sync {
 
 #[async_trait::async_trait]
 pub trait FilesStore: Send + Sync {
-    async fn get_files(&self, item_id: u32) -> Result<Vec<File>, StoreError>;
+    async fn get_files(&self, item_ids: Vec<u32>) -> Result<Vec<File>, StoreError>;
     async fn create_file(
         &mut self,
         file: CreateFile,

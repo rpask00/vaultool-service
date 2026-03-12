@@ -9,21 +9,26 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum_extra::extract::Multipart;
 use color_eyre::eyre::eyre;
-use serde_json::json;
-use std::collections::HashMap;
 use serde::Deserialize;
+use serde_json::json;
+use serde_with::formats::CommaSeparator;
+use serde_with::{StringWithSeparator, serde_as};
+use std::collections::HashMap;
 
+#[serde_as]
 #[derive(Debug, Deserialize)]
 pub struct FilesQuery {
-    item_id: u32,
+    #[serde_as(as = "StringWithSeparator::<CommaSeparator, u32>")]
+    item_ids: Vec<u32>,
 }
 
 pub async fn list(
     State(state): State<AppState>,
     Query(query): Query<FilesQuery>,
 ) -> Result<impl IntoResponse, ApiError> {
+    println!("{:?}", query);
     let files_store = state.files_store.read().await;
-    let files = files_store.get_files(query.item_id).await?;
+    let files = files_store.get_files(query.item_ids).await?;
 
     Ok((StatusCode::OK, Json(files)))
 }
@@ -76,13 +81,13 @@ pub async fn create(
 
     let item_id = form_data
         .get("item_id")
-        .ok_or_else(|| ApiError::UnexpectedError(eyre!("Missing item_id in form data")))?
-        .parse::<u32>()
+        .map(|id| id.to_owned().parse::<u32>())
+        .transpose()
         .map_err(|e| ApiError::UnexpectedError(eyre!(e)))?;
 
     let mut files_store = state.files_store.write().await;
 
-    let mut output  = vec![];
+    let mut output = vec![];
 
     for (file_name, file_data) in files {
         let file = files_store
@@ -91,7 +96,7 @@ pub async fn create(
                     item_id,
                     name: file_name,
                     category,
-                    priority
+                    priority,
                 },
                 file_data,
             )
@@ -100,10 +105,7 @@ pub async fn create(
         output.push(file);
     }
 
-    Ok((
-        StatusCode::CREATED,
-        Json(json!(output)),
-    ))
+    Ok((StatusCode::CREATED, Json(json!(output))))
 }
 
 pub async fn delete(

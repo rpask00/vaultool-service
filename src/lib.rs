@@ -34,6 +34,7 @@ impl Application {
 
         let allowed_origins = [
             "http://localhost:4200".parse()?,
+            "http://localhost:4040".parse()?,
             "http://167.71.36.159:7000".parse()?,
         ];
 
@@ -58,7 +59,7 @@ impl Application {
             .route("/files", get(routes::files::list))
             .route("/files", post(routes::files::create))
             .route("/files/{id}", delete(routes::files::delete))
-            .nest_service("/images", ServeDir::new("uploads"))
+            .nest_service("/uploads", ServeDir::new("uploads"))
             .layer(DefaultBodyLimit::max(50 * 1024 * 1024)) // 50MB
             .with_state(app_state)
             .layer(cors_layer)

@@ -20,14 +20,16 @@ impl PostgresFilesStore {
 
 #[async_trait::async_trait]
 impl FilesStore for PostgresFilesStore {
-    async fn get_files(&self, item_id: u32) -> Result<Vec<File>, StoreError> {
+    async fn get_files(&self, item_ids: Vec<u32>) -> Result<Vec<File>, StoreError> {
+        let item_ids: Vec<i32> = item_ids.into_iter().map(|id| id as i32).collect();
+
         sqlx::query!(
             r#"
             SELECT id, item_id, name, created_at, category, size, extension, priority
             FROM files
-            WHERE item_id = $1
+            WHERE item_id = ANY($1)
             "#,
-            item_id as i64
+            &item_ids
         )
         .fetch_all(&self.pool)
         .await
@@ -35,7 +37,7 @@ impl FilesStore for PostgresFilesStore {
         .into_iter()
         .map(|row| File {
             id: row.id as u32,
-            item_id: Some(row.item_id as u32),
+            item_id: row.item_id.map(|id| id as u32),
             name: row.name,
             priority: row.priority as u32,
             ext: row.extension,
@@ -62,7 +64,7 @@ impl FilesStore for PostgresFilesStore {
             VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING id, item_id, name, created_at, category, size, extension, priority
             "#,
-            file.item_id as i64,
+            file.item_id.map(|id| id as i32),
             file.name,
             file.category as i32,
             file_data.len() as i64,
@@ -74,7 +76,7 @@ impl FilesStore for PostgresFilesStore {
         .map_err(|e| StoreError::UnexpectedError(e.into()))
         .map(|row| File {
             id: row.id as u32,
-            item_id: Some(row.item_id as u32),
+            item_id: row.item_id.map(|id| id as u32),
             name: row.name,
             priority: row.priority as u32,
             ext: row.extension,
@@ -120,9 +122,7 @@ impl FilesStore for PostgresFilesStore {
         for file in files {
             for entry in glob(&format!("uploads/{}.*", file.id)).unwrap() {
                 if let Ok(path) = entry {
-                    fs::remove_file(path).map_err(
-                        |e| StoreError::UnexpectedError(e.into())
-                    )?;
+                    fs::remove_file(path).map_err(|e| StoreError::UnexpectedError(e.into()))?;
                 }
             }
         }
