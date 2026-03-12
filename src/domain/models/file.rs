@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
+use serde_repr::Deserialize_repr;
 
-#[derive(Deserialize, PartialEq, Debug, Clone, Copy)]
+#[derive(Deserialize_repr, PartialEq, Debug, Clone, Copy)]
+#[repr(u32)]
 pub enum FileCategory {
     PHOTO = 1,
     OTHER = 999,

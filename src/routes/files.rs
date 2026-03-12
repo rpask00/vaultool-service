@@ -1,5 +1,5 @@
 use crate::app_state::AppState;
-use crate::domain::dto::file::CreateFile;
+use crate::domain::dto::file::{CreateFile, UpdateFile};
 use crate::domain::error::ApiError;
 use crate::domain::models::file::FileCategory;
 use axum::Json;
@@ -107,6 +107,19 @@ pub async fn create(
 
     Ok((StatusCode::CREATED, Json(json!(output))))
 }
+
+
+pub async fn update(
+    State(state): State<AppState>,
+    Path(file_id): Path<u32>,
+    Json(file): Json<UpdateFile>,
+) -> Result<impl IntoResponse, ApiError> {
+    let mut files_store = state.files_store.write().await;
+    let updated_file = files_store.update_file(file_id, file).await?;
+
+    Ok((StatusCode::OK, Json(updated_file)))
+}
+
 
 pub async fn delete(
     State(state): State<AppState>,

@@ -1,5 +1,5 @@
 use crate::domain::data_stores::FilesStore;
-use crate::domain::dto::file::CreateFile;
+use crate::domain::dto::file::{CreateFile, UpdateFile};
 use crate::domain::error::StoreError;
 use crate::domain::models::file::{File, FileCategory};
 use axum::body::Bytes;
@@ -28,6 +28,7 @@ impl FilesStore for PostgresFilesStore {
             SELECT id, item_id, name, created_at, category, size, extension, priority
             FROM files
             WHERE item_id = ANY($1)
+            LIMIT 1000
             "#,
             &item_ids
         )
@@ -116,6 +117,41 @@ impl FilesStore for PostgresFilesStore {
         .map_err(|e| StoreError::UnexpectedError(e.into()))?;
 
         Ok(())
+    }
+
+    async fn update_file(&mut self, id: u32, file: UpdateFile) -> Result<File, StoreError> {
+
+        sqlx::query!(
+            r#"
+            UPDATE files
+            SET name = COALESCE($1, name),
+                category = COALESCE($2, category),
+                priority = COALESCE($3, priority),
+                item_id = COALESCE($4, item_id)
+            WHERE id = $5
+            RETURNING id, item_id, name, created_at, category, size, extension, priority
+            "#,
+            file.name,
+            file.category.as_ref().map(|c| *c as i32),
+            file.priority.map(|p| p as i32),
+            file.item_id.map(|p| p as i32),
+            id as i64,
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| StoreError::UnexpectedError(e.into()))?
+        .map(|row| File {
+            id: row.id as u32,
+            item_id: row.item_id.map(|id| id as u32),
+            name: row.name,
+            priority: row.priority as u32,
+            ext: row.extension,
+            category: FileCategory::from(row.category),
+            created_at: row.created_at.to_string(),
+            size: row.size as u32,
+        })
+        .ok_or(StoreError::NotFound)
+
     }
 
     async fn delete_files_from_fs(&mut self, files: Vec<File>) -> Result<(), StoreError> {

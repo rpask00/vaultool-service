@@ -59,6 +59,7 @@ impl Application {
             .route("/files", get(routes::files::list))
             .route("/files", post(routes::files::create))
             .route("/files/{id}", delete(routes::files::delete))
+            .route("/files/{id}", put(routes::files::update))
             .nest_service("/uploads", ServeDir::new("uploads"))
             .layer(DefaultBodyLimit::max(50 * 1024 * 1024)) // 50MB
             .with_state(app_state)

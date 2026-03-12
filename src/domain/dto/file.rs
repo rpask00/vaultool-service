@@ -8,3 +8,11 @@ pub struct CreateFile {
     pub category: FileCategory,
     pub priority: u32
 }
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct UpdateFile {
+    pub item_id: Option<u32>,
+    pub name: Option<String>,
+    pub category: Option<FileCategory>,
+    pub priority: Option<u32>
+}

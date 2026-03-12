@@ -1,4 +1,4 @@
-use crate::domain::dto::file::CreateFile;
+use crate::domain::dto::file::{CreateFile, UpdateFile};
 use crate::domain::dto::item::{CreateItem, UpdateItem};
 use crate::domain::error::StoreError;
 use crate::domain::models::file::File;
@@ -28,5 +28,6 @@ pub trait FilesStore: Send + Sync {
         file_data: Bytes,
     ) -> Result<File, StoreError>;
     async fn delete_file(&mut self, id: u32) -> Result<(), StoreError>;
+    async fn update_file(&mut self, id: u32, file: UpdateFile) -> Result<File, StoreError>;
     async fn delete_files_from_fs(&mut self, files: Vec<File>) -> Result<(), StoreError>;
 }
