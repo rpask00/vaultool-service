@@ -3,6 +3,7 @@
 .envrc
 .idea
 .cargo
+.vscode
 compose.yml
 
 uploads
