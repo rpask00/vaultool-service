@@ -4,8 +4,8 @@ use serde_repr::Deserialize_repr;
 #[derive(Deserialize_repr, PartialEq, Debug, Clone, Copy)]
 #[repr(u32)]
 pub enum FileCategory {
-    PHOTO = 1,
-    OTHER = 999,
+    Photo = 1,
+    Other = 999,
 }
 
 impl Serialize for FileCategory {
@@ -20,8 +20,8 @@ impl Serialize for FileCategory {
 impl From<String> for FileCategory {
     fn from(value: String) -> Self {
         match value.to_lowercase().as_str() {
-            "1" => Self::PHOTO,
-            _ => Self::OTHER,
+            "1" => Self::Photo,
+            _ => Self::Other,
         }
     }
 }
@@ -29,8 +29,8 @@ impl From<String> for FileCategory {
 impl From<i32> for FileCategory {
     fn from(value: i32) -> Self {
         match value {
-            1 => Self::PHOTO,
-            _ => Self::OTHER,
+            1 => Self::Photo,
+            _ => Self::Other,
         }
     }
 }
@@ -55,15 +55,15 @@ mod tests {
 
     #[test]
     fn test_file_category_from_string() {
-        assert_eq!(FileCategory::from("1".to_string()), FileCategory::PHOTO);
-        assert_eq!(FileCategory::from("asdf".to_string()), FileCategory::OTHER);
-        assert_eq!(FileCategory::from("other".to_string()), FileCategory::OTHER);
+        assert_eq!(FileCategory::from("1".to_string()), FileCategory::Photo);
+        assert_eq!(FileCategory::from("asdf".to_string()), FileCategory::Other);
+        assert_eq!(FileCategory::from("other".to_string()), FileCategory::Other);
     }
 
     #[test]
     fn test_file_category_from_i32() {
-        assert_eq!(FileCategory::from(1), FileCategory::PHOTO);
-        assert_eq!(FileCategory::from(9999999), FileCategory::OTHER);
-        assert_eq!(FileCategory::from(999), FileCategory::OTHER);
+        assert_eq!(FileCategory::from(1), FileCategory::Photo);
+        assert_eq!(FileCategory::from(9999999), FileCategory::Other);
+        assert_eq!(FileCategory::from(999), FileCategory::Other);
     }
 }

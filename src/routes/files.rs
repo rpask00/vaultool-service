@@ -72,13 +72,13 @@ pub async fn create(
 
     // Extract specific fields
     let category = form_data
-        .get(&"category".to_string())
+        .get("category")
         .cloned()
         .map(|cat| cat.into())
-        .unwrap_or(FileCategory::OTHER);
+        .unwrap_or(FileCategory::Other);
 
     let priority = form_data
-        .get(&"priority".to_string())
+        .get("priority")
         .map(|priority| priority.to_owned())
         .unwrap_or("0".to_string())
         .parse::<u32>()

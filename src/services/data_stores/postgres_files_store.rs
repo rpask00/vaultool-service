@@ -56,7 +56,7 @@ impl FilesStore for PostgresFilesStore {
         file: CreateFile,
         file_data: Bytes,
     ) -> Result<File, StoreError> {
-        if fs::exists("uploads".to_string()).unwrap() {
+        if fs::exists("uploads").unwrap() {
             fs::create_dir_all("uploads").map_err(|e| StoreError::UnexpectedError(e.into()))?;
         }
 
@@ -92,7 +92,7 @@ impl FilesStore for PostgresFilesStore {
         let file_clone = file.clone();
 
         tokio::task::spawn_blocking(move || {
-            let file_path = format!("uploads/{}.{}", file_clone.id.to_string(), file_clone.ext);
+            let file_path = format!("uploads/{}.{}", file_clone.id, file_clone.ext);
             fs::write(file_path, file_data).map_err(|e| StoreError::UnexpectedError(e.into()))
         })
         .await
@@ -102,10 +102,8 @@ impl FilesStore for PostgresFilesStore {
     }
 
     async fn delete_file(&mut self, id: u32) -> Result<(), StoreError> {
-        for entry in glob(&format!("uploads/{}.*", id)).unwrap() {
-            if let Ok(path) = entry {
-                fs::remove_file(path).unwrap();
-            }
+        for path in glob(&format!("uploads/{}.*", id)).unwrap().flatten() {
+            fs::remove_file(path).unwrap();
         }
 
         sqlx::query!(
@@ -123,7 +121,6 @@ impl FilesStore for PostgresFilesStore {
     }
 
     async fn update_file(&mut self, id: u32, file: UpdateFile) -> Result<File, StoreError> {
-
         sqlx::query!(
             r#"
             UPDATE files
@@ -155,15 +152,12 @@ impl FilesStore for PostgresFilesStore {
             size: row.size as u32,
         })
         .ok_or(StoreError::NotFound)
-
     }
 
     async fn delete_files_from_fs(&mut self, files: Vec<File>) -> Result<(), StoreError> {
         for file in files {
-            for entry in glob(&format!("uploads/{}.*", file.id)).unwrap() {
-                if let Ok(path) = entry {
-                    fs::remove_file(path).map_err(|e| StoreError::UnexpectedError(e.into()))?;
-                }
+            for path in glob(&format!("uploads/{}.*", file.id)).unwrap().flatten() {
+                fs::remove_file(path).map_err(|e| StoreError::UnexpectedError(e.into()))?;
             }
         }
 
