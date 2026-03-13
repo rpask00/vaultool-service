@@ -25,7 +25,7 @@ impl FilesStore for PostgresFilesStore {
 
         sqlx::query!(
             r#"
-            SELECT id, item_id, name, created_at, category, size, extension, priority
+            SELECT id, item_id, name, created_at, category, size, extension, priority, content_type
             FROM files
             WHERE item_id = ANY($1)
             LIMIT 1000
@@ -40,6 +40,7 @@ impl FilesStore for PostgresFilesStore {
             id: row.id as u32,
             item_id: row.item_id.map(|id| id as u32),
             name: row.name,
+            content_type: row.content_type,
             priority: row.priority as u32,
             ext: row.extension,
             category: FileCategory::from(row.category),
@@ -61,16 +62,17 @@ impl FilesStore for PostgresFilesStore {
 
         let file = sqlx::query!(
             r#"
-            INSERT INTO files (item_id, name, category, size, extension, priority)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            RETURNING id, item_id, name, created_at, category, size, extension, priority
+            INSERT INTO files (item_id, name, category, size, extension, priority, content_type)
+            VALUES ($1, $2, $3, $4, $5, $6 , $7)
+            RETURNING id, item_id, name, created_at, category, size, extension, priority, content_type
             "#,
             file.item_id.map(|id| id as i32),
             file.name,
             file.category as i32,
             file_data.len() as i64,
             file.name.split('.').last().unwrap_or("png").to_string(),
-            file.priority as i64
+            file.priority as i64,
+            file.content_type,
         )
         .fetch_one(&self.pool)
         .await
@@ -80,6 +82,7 @@ impl FilesStore for PostgresFilesStore {
             item_id: row.item_id.map(|id| id as u32),
             name: row.name,
             priority: row.priority as u32,
+            content_type: row.content_type,
             ext: row.extension,
             category: FileCategory::from(row.category),
             created_at: row.created_at.to_string(),
@@ -129,7 +132,7 @@ impl FilesStore for PostgresFilesStore {
                 priority = COALESCE($3, priority),
                 item_id = COALESCE($4, item_id)
             WHERE id = $5
-            RETURNING id, item_id, name, created_at, category, size, extension, priority
+            RETURNING id, item_id, name, created_at, category, size, extension, priority, content_type
             "#,
             file.name,
             file.category.as_ref().map(|c| *c as i32),
@@ -144,6 +147,7 @@ impl FilesStore for PostgresFilesStore {
             id: row.id as u32,
             item_id: row.item_id.map(|id| id as u32),
             name: row.name,
+            content_type: row.content_type,
             priority: row.priority as u32,
             ext: row.extension,
             category: FileCategory::from(row.category),

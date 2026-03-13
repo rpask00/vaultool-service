@@ -6,6 +6,7 @@ pub struct CreateFile {
     pub item_id: Option<u32>,
     pub name: String,
     pub category: FileCategory,
+    pub content_type: String,
     pub priority: u32
 }
 

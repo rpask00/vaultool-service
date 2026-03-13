@@ -42,6 +42,7 @@ pub struct File {
     pub name: String,
     pub priority: u32,
     pub ext: String,
+    pub content_type: String,
     pub category: FileCategory,
     pub created_at: String,
     pub size: u32,

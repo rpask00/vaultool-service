@@ -38,7 +38,7 @@ pub async fn create(
     mut multipart: Multipart,
 ) -> Result<impl IntoResponse, ApiError> {
     let mut form_data = HashMap::new();
-    let mut files: Vec<(String, Bytes)> = Vec::new();
+    let mut files: Vec<(String, String, Bytes)> = Vec::new();
 
     while let Some(field) = multipart
         .next_field()
@@ -48,12 +48,17 @@ pub async fn create(
         if let Some(file_name) = field.file_name() {
             let file_name = file_name.to_owned();
 
+            let content_type = field
+                .content_type()
+                .map(|ct| ct.to_string())
+                .unwrap_or_else(|| "application/octet-stream".to_string());
+
             let file_data = field
                 .bytes()
                 .await
                 .map_err(|e| ApiError::UnexpectedError(eyre!(e)))?;
 
-            files.push((file_name.to_string(), file_data));
+            files.push((file_name, content_type, file_data));
         } else {
             let field_name = field.name().unwrap_or("unknown").to_owned();
 
@@ -89,12 +94,13 @@ pub async fn create(
 
     let mut output = vec![];
 
-    for (file_name, file_data) in files {
+    for (file_name, content_type, file_data) in files {
         let file = files_store
             .create_file(
                 CreateFile {
                     item_id,
                     name: file_name,
+                    content_type,
                     category,
                     priority,
                 },
@@ -108,7 +114,6 @@ pub async fn create(
     Ok((StatusCode::CREATED, Json(json!(output))))
 }
 
-
 pub async fn update(
     State(state): State<AppState>,
     Path(file_id): Path<u32>,
@@ -119,7 +124,6 @@ pub async fn update(
 
     Ok((StatusCode::OK, Json(updated_file)))
 }
-
 
 pub async fn delete(
     State(state): State<AppState>,
